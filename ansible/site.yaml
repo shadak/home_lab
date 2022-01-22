@@ -1,0 +1,23 @@
+---
+
+- hosts: all
+  pre_tasks:
+
+    - name: Update apt Cache
+      apt:
+        update_cache: true
+
+- hosts: nameservers
+  become: true
+  roles:
+    - pihole 
+
+- hosts: grafana
+  become: true
+  roles: 
+    - grafana
+
+- hosts: prometheus
+  become: true
+  roles:
+    - prometheus

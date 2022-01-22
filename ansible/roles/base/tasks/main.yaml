@@ -1,0 +1,4 @@
+- name: update apt cach and upgrade distro
+  apt:
+    update_cache: true
+    upgrade: dist

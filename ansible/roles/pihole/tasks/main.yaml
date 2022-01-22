@@ -1,0 +1,101 @@
+- name: install git
+  apt:
+    name: git
+
+- name: install ssh
+  apt:
+    name: ssh
+
+- name: install sqlite3
+  apt:
+    name: sqlite3
+
+- name: install rsync
+  apt:
+    name: rsync
+
+- name: install curl
+  apt:
+    name: curl
+
+- name: enable ufw
+  community.general.ufw:
+    state: enabled
+
+- name: set logging
+  community.general.ufw:
+    logging: 'on'
+
+- name: allow port 22
+  community.general.ufw:
+    rule: allow
+    port: '22'
+
+- name: allow port 80
+  community.general.ufw:
+    rule: allow
+    port: '80'
+
+- name: allow http
+  community.general.ufw:
+    rule: allow
+    port: http 
+
+- name: allow https
+  community.general.ufw:
+    rule: allow
+    port: https
+
+- name: create /etc/pihole directory
+  ansible.builtin.file:
+    path: /etc/pihole
+    state: directory
+    mode: '0755'
+    
+- name: copy configuration
+  copy:
+    src: files/setupVars.conf
+    dest: /etc/pihole/setupVars.conf
+    mode: 0644
+
+- name: run unattended installer
+  become: yes
+  become_user: root
+  shell: curl -L https://install.pi-hole.net | bash /dev/stdin --unattended
+
+- name: create pihole-adm service account
+  ansible.builtin.user:
+    name: pihole-adm 
+    generate_ssh_key: yes
+    ssh_key_bits: 2048
+    ssh_key_file: .ssh/id_rsa
+    groups: sudo
+
+- name: enable passwordless sudo
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^%sudo'
+    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: set cron jobs
+  become: yes
+  become_user: root
+  cron:
+    name: "daily updater"
+    user: "www-data"
+    minute: "0"
+    hour: "0"
+    job: "/usr/local/bin/pihole -up"
+
+- import_role:
+    name: pihole_master
+  when: groups['nameservers'].index(inventory_hostname) == 0
+
+- import_role:
+    name: pihole_slave
+  when: groups['nameservers'].index(inventory_hostname) != 0
+
+
+
