@@ -2,7 +2,6 @@
 
 - hosts: all
   pre_tasks:
-
     - name: Update apt Cache
       apt:
         update_cache: true
@@ -10,14 +9,69 @@
 - hosts: nameservers
   become: true
   roles:
-    - pihole 
+    - role: pihole
+    - role: cloudalchemy.node_exporter
+    - role: gravity_master
+      when: hostvars[inventory_hostname].gravity_master == true
+    - role: gravity_slave 
+      when: hostvars[inventory_hostname].gravity_master == false
 
-- hosts: grafana
-  become: true
-  roles: 
-    - grafana
-
-- hosts: prometheus
+- hosts: monitors
   become: true
   roles:
-    - prometheus
+    - role: cloudalchemy.grafana
+      vars:
+        grafana_security:
+          admin_user: admin
+          admin_password: "test123"
+        grafana_datasources:
+          - name: prometheus
+            type: prometheus
+            access: proxy
+            url: 'http://10.20.10.62:9090'
+            basicAuth: false
+      when: hostvars[inventory_hostname].grafana_monitor == true
+    - role: cloudalchemy.prometheus
+      vars:
+        prometheus_targets:
+          node:
+            - targets:
+              - ns01.management.local
+              - ns02.management.local
+      when: hostvars[inventory_hostname].prometheus_monitor == true
+
+- hosts: docker
+  become: true
+  roles:
+    - role: geerlingguy.docker
+      vars:
+        docker_edition: 'ce'
+
+- hosts: unifi-controller
+  become: true
+  roles:
+    - role: nephelaiio.unifi_controller
+
+
+#- hosts: grafana
+#  become: true
+#  roles: 
+#    - grafana
+#
+#- hosts: prometheus
+#  become: true
+#  roles:
+#    - prometheus
+
+#- hosts: monitor
+#  become: true
+#  roles: 
+#    - role: prometheus
+#      when: hostvars[inventory_hostname].install_prometheus == true
+#    - role: grafana
+#      when: hostvars[inventory_hostname].install_grafana == true
+#
+#- hosts: workstation
+#  become: true
+#  roles:
+#    - workstation

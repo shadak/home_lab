@@ -1,18 +1,13 @@
-[workstations]
-ws02 ansible_host=10.10.10.152
-
-[services]
-git01 ansible_host=10.10.10.161
-
 [nameservers]
-ns01 ansible_host=10.10.10.221 
-ns02 ansible_host=10.10.10.222
+ns01.management.local ansible_host=10.20.10.51
+ns02.management.local ansible_host=10.20.10.52
 
 [monitors]
-mon01 ansible_host=10.10.10.231
-mon02 ansible_host=10.10.10.232
-mon03 ansible_host=10.10.10.233
+mon01.management.local ansible_host=10.20.10.61
+mon02.management.local ansible_host=10.20.10.62
 
-[dmz]
-bas01 ansible_host=10.10.10.241
-wg01 ansible_host=10.10.10.242
+[docker]
+app01.application.local ansible_host=10.20.12.11
+
+[unifi-controller]
+uni01.management.local ansible_host=10.20.10.11

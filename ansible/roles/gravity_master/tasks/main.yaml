@@ -1,0 +1,6 @@
+---
+
+- name: install gravity-sync for master
+  become: true
+  become_user: pihole-adm 
+  shell: export GS_INSTALL=primary && curl -sSL https://gravity.vmstan.com | bash

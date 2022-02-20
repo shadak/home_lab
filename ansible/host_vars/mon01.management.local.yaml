@@ -1,0 +1,4 @@
+---
+
+grafana_monitor: true
+prometheus_monitor: false

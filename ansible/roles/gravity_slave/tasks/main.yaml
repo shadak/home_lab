@@ -1,0 +1,38 @@
+---
+
+- name: clone gravity sync repository 
+  become: true
+  become_user: pihole-adm
+  git:
+    repo: 'https://github.com/vmstan/gravity-sync.git'
+    dest: ~/gravity-sync
+
+- name: copy gravity sync config
+  become: true
+  become_user: pihole-adm
+  template:
+    src: files/gravity-sync.conf.j2
+    dest: ~/gravity_sync/settings/gravity-sync.conf
+    
+- name: fetch the keyfile
+  shell: "cat /home/pihole-adm/.ssh/id_rsa.pub"
+  register: pub_key
+
+- name: copy the key to master pihole
+  authorized_key:
+    user: pihole-adm 
+    key: "{{ pub_key.stdout }}"
+  delegate_to: "{{ groups['nameservers'][0] }}"
+
+- name: add master pihole to known hosts
+  become: true
+  become_user: pihole-adm
+  shell: ssh-keyscan -H {{ hostvars[groups['nameservers'][0]].ansible_host }} >> ~/.ssh/known_hosts
+
+- name: create cron job for sync 
+  become: true
+  become_user: pihole-adm
+  cron:
+    name: "gravity-sync"
+    minute: 15
+    job: "/bin/bash /home/pihole-adm/gravity-sync/gravity-sync.sh smart > /home/pihole-adm/gravity-sync/logs/gravity-sync.cron"
